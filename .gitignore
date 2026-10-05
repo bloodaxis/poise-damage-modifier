@@ -1,0 +1,8 @@
+build/
+.zig-cache/
+zig-cache/
+*.dll
+*.pdb
+*.lib
+*.log
+__pycache__/
