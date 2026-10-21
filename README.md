@@ -28,3 +28,9 @@ python3 poise-damage-modifier/verify_build.py
 On Windows, run `poise-damage-modifier\build.cmd` and then
 `py -3 poise-damage-modifier\verify_build.py`. The build produces a Windows x64
 DLL; the verifier checks its executable sections against the release build.
+
+## References
+
+- [techiew/EldenRingMods](https://github.com/techiew/EldenRingMods) — DLL initialization patterns.
+- [Nordgaren/Erd-Tools-CPP](https://github.com/Nordgaren/Erd-Tools-CPP) — runtime PARAM access.
+- [vswarte/fromsoftware-rs](https://github.com/vswarte/fromsoftware-rs) — FromSoftware formats and tooling.
