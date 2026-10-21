@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cwchar>
 #include <cstring>
-#include "../mod-settings-menu/mod_settings_api.h"
+#include "../shared/mod_settings_api.h"
 
 namespace {
 constexpr uint32_t effect_ids[2]{100620,100621};
@@ -53,17 +53,35 @@ bool supported_game(){
     return read(game,dos)&&dos.e_magic==IMAGE_DOS_SIGNATURE&&dos.e_lfanew>=0&&
         dos.e_lfanew<0x1000&&read(game+dos.e_lfanew,nt)&&nt.Signature==IMAGE_NT_SIGNATURE&&
         nt.FileHeader.Machine==IMAGE_FILE_MACHINE_AMD64&&
-        nt.FileHeader.TimeDateStamp==0x6a96b418&&nt.OptionalHeader.SizeOfImage==0x5e0da00;
+        (nt.FileHeader.TimeDateStamp==0x6aabf7e7||nt.FileHeader.TimeDateStamp==0x6aabf7e7)&&
+        nt.OptionalHeader.SizeOfImage==0x5dfd600;
+}
+bool scan_records(const unsigned char* records,uint32_t count,uintptr_t header,uint32_t data_offset,
+                  uint64_t type_offset,uintptr_t (&addresses)[2]){
+    for(uint32_t row=0;row<count;++row){
+        uint32_t id=0,offset=0;
+        memcpy(&id,records+size_t(row)*0x18,4);
+        memcpy(&offset,records+size_t(row)*0x18+8,4);
+        int index=id==effect_ids[0]?0:id==effect_ids[1]?1:-1;
+        if(index<0)continue;
+        if(addresses[index]||offset<data_offset||uint64_t(offset)+effect_row_size>type_offset)return false;
+        float current=0;
+        uintptr_t address=header+offset+sa_attack_power_rate_offset;
+        if(!read(address,current)||!std::isfinite(current)||current<0||current>100)return false;
+        addresses[index]=address;
+        if(addresses[0]&&addresses[1])return true;
+    }
+    return false;
 }
 bool find_effect_rates(uintptr_t (&addresses)[2]){
     addresses[0]=addresses[1]=0;
     // Verified executable's SoloParamRepository pointer. Layout and table
     // offsets follow Erd-Tools-CPP ParamEditor and the 912-byte ER SpEffect row.
-    constexpr unsigned char signature[]{0x48,0x8b,0x0d,0xf5,0x5e,0x05,0x03,0x48,0x85,0xc9};
+    constexpr unsigned char signature[]{0x48,0x8b,0x0d,0x25,0x78,0x05,0x03,0x48,0x85,0xc9};
     unsigned char actual[sizeof(signature)]{};
-    if(!read_bytes(game+0xd3005c,actual,sizeof(actual))||memcmp(actual,signature,sizeof(signature)))return false;
+    if(!read_bytes(game+0xd3174c,actual,sizeof(actual))||memcmp(actual,signature,sizeof(signature)))return false;
     uintptr_t repository=0;
-    if(!read(game+0x3d85f58,repository)||!repository)return false;
+    if(!read(game+0x3d88f78,repository)||!repository)return false;
     for(unsigned i=0;i<186;++i){
         uintptr_t entry=repository+0x80+i*0x48,resource=0,name_ptr=0,info=0,header=0;
         uint8_t loaded=0;
@@ -85,20 +103,13 @@ bool find_effect_rates(uintptr_t (&addresses)[2]){
            first<data_offset||second-first!=effect_row_size)return false;
         // The table is sorted in these PARAMs, but a bounded linear lookup
         // avoids depending on that property. Menu saves use cached addresses.
-        for(uint32_t row=0;row<count;++row){
-            uintptr_t record=header+0x40+uintptr_t(row)*0x18;
-            uint32_t id=0,offset=0;
-            if(!read(record,id)||!read(record+8,offset))return false;
-            int index=id==effect_ids[0]?0:id==effect_ids[1]?1:-1;
-            if(index<0)continue;
-            if(addresses[index]||offset<data_offset||uint64_t(offset)+effect_row_size>type_offset)return false;
-            float current=0;
-            uintptr_t address=header+offset+sa_attack_power_rate_offset;
-            if(!read(address,current)||!std::isfinite(current)||current<0||current>100)return false;
-            addresses[index]=address;
-            if(addresses[0]&&addresses[1])return true;
-        }
-        return false;
+        const size_t records_size=size_t(count)*0x18;
+        auto* records=static_cast<unsigned char*>(HeapAlloc(GetProcessHeap(),0,records_size));
+        if(!records)return false;
+        const bool ok=read_bytes(header+0x40,records,records_size)&&
+            scan_records(records,count,header,data_offset,type_offset,addresses);
+        HeapFree(GetProcessHeap(),0,records);
+        return ok;
     }
     return false;
 }
