@@ -15,3 +15,11 @@ The DLL behavior and INI settings are unchanged. Mod Settings Menu remains optio
 Release asset: `poise-damage-modifier-v0.2.0.zip`.
 ZIP SHA-256: `a23990b99688883f0079486cc1f8d17ce402fb9913fdc331c74af867cd48a21a`.
 DLL SHA-256: `a9318b81bdabb978c2d0e7cc8dcd429fb1511c33ad63b3182352c917c00620e5`.
+
+## v2.1
+
+Small refactor
+
+Release asset: `poise-damage-modifier-2.1.zip`.
+ZIP SHA-256: `f94c17a8e6cc38cfe6f1716c3e60855e883367a107e234e767cc68345581f6f5`.
+DLL SHA-256: `1e83adf17cb63d92f44765ea7df75ef690188050b6a8525aa4bfcc9479da65ea`.

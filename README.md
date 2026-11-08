@@ -1,14 +1,6 @@
 # Poise Damage Modifier
 
-Author: **Bloodaxis**
-
-Sets `saAttackPowerRate` in loaded `SpEffectParam` rows 100620 and 100621. The
-multiplier ranges from 0 to 100; 1 is neutral. Mod Settings Menu is optional.
-This row-wide edit affects any actor carrying either effect; in-game recipients
-and updates to already-active effects have not been fully verified.
-
-Version `v0.2.0` supports Elden Ring executable timestamp `0x6aabf7e7` and image
-size `0x5dfd600`. Unsupported executable or PARAM layouts are left untouched.
+Multiplies poise damage in Elden Ring (0 to 100, 1 is vanilla). Mod Settings Menu is optional.
 
 ## Install
 
